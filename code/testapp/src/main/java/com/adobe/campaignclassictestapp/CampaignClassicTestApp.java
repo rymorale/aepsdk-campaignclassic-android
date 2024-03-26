@@ -22,7 +22,6 @@ public class CampaignClassicTestApp extends Application {
 		super.onCreate();
 		MobileCore.setApplication(this);
 		MobileCore.setLogLevel(LoggingMode.VERBOSE);
-
 		try {
 			List<Class<? extends Extension>> extensions = Arrays.asList(
 					CampaignClassic.EXTENSION

@@ -13,9 +13,10 @@ package com.adobe.marketing.mobile;
 import android.app.Notification;
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationManagerCompat;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ui.pushtemplate.AEPPushPayload;
+import com.adobe.marketing.mobile.services.ui.pushtemplate.NotificationConstructionFailedException;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,56 +47,6 @@ public class AEPMessagingService {
         AEPPushPayload payload;
         try {
             payload = new AEPPushPayload(remoteMessage);
-            final String tag = payload.getTag();
-            final Notification notification =
-                    AEPPushNotificationBuilder.buildPushNotification(payload, context);
-            notificationManager.notify(tag.hashCode(), notification);
-        } catch (final IllegalArgumentException exception) {
-            Log.error(
-                    CampaignPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Failed to create a push notification, an illegal argument exception occurred:"
-                            + " %s",
-                    exception.getLocalizedMessage());
-            return false;
-        } catch (final NotificationConstructionFailedException exception) {
-            Log.error(
-                    CampaignPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Failed to create a push notification, a notification construction failed"
-                            + " exception occurred: %s",
-                    exception.getLocalizedMessage());
-            return false;
-        }
-
-        // call track notification receive as we know that the push payload data is valid
-        trackNotificationReceive(payload);
-
-        return true;
-    }
-
-    /**
-     * Builds an {@link AEPPushPayload} then constructs a {@link Notification} using the {@code
-     * Map<String, String>} payload. The built notification is then passed to the {@link
-     * NotificationManagerCompat} to be displayed. If any exceptions are thrown when building the
-     * {@code AEPPushPayload} or {@code Notification}, this method will return false signaling that
-     * the remote message was not handled by the {@code AEPMessagingService}.
-     *
-     * @param context the application {@link Context}
-     * @param messageData the {@link Map<String, String>} containing a push notification payload
-     * @return {@code boolean} signaling if the {@link AEPMessagingService} handled the remote
-     *     message
-     */
-    // TODO: added for testing only, will be removed in the future
-    @VisibleForTesting
-    // public
-    static boolean handleRemoteMessageData(
-            @NonNull final Context context, @NonNull final Map<String, String> messageData) {
-        final NotificationManagerCompat notificationManager =
-                NotificationManagerCompat.from(context);
-        AEPPushPayload payload;
-        try {
-            payload = new AEPPushPayload(messageData);
             final String tag = payload.getTag();
             final Notification notification =
                     AEPPushNotificationBuilder.buildPushNotification(payload, context);
