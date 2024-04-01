@@ -32,9 +32,9 @@ import java.util.concurrent.CountDownLatch;
  *
  * <p>The {@link #buildPushNotification(AEPPushPayload, Context)} method in this class takes the
  * {@link AEPPushPayload} created from the push notification and builds the notification. This class
- * is used internally by the {@link AEPMessagingService} to build the push notification.
+ * is used internally by the {@link CampaignMessagingService} to build the push notification.
  */
-class AEPPushNotificationBuilder {
+class CampaignPushNotificationBuilder {
     public static CampaignPushTrackerActivity trackerActivity;
     public static AEPPushTemplateBroadcastReceiver broadcastReceiver;
 
@@ -68,7 +68,7 @@ class AEPPushNotificationBuilder {
         final PushTemplateType pushTemplateType =
                 messageData.get(CampaignPushConstants.PushPayloadKeys.TEMPLATE_TYPE) == null
                         ? PushTemplateType.UNKNOWN
-                        : PushTemplateType.Companion.fromString(
+                        : PushTemplateType.fromString(
                                 messageData.get(
                                         CampaignPushConstants.PushPayloadKeys.TEMPLATE_TYPE));
         switch (pushTemplateType) {

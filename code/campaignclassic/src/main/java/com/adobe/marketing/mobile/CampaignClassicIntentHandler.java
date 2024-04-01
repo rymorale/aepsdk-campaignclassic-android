@@ -37,7 +37,7 @@ class CampaignClassicIntentHandler {
         try {
             final NotificationManagerCompat notificationManager =
                     NotificationManagerCompat.from(context);
-            final Notification notification = TemplateUtils.constructNotificationBuilder(context, AEPPushNotificationBuilder.trackerActivity, AEPPushNotificationBuilder.broadcastReceiver, intent, PushTemplateType.CAROUSEL).build();
+            final Notification notification = TemplateUtils.constructNotificationBuilder(context, CampaignPushNotificationBuilder.trackerActivity, CampaignPushNotificationBuilder.broadcastReceiver, intent, PushTemplateType.CAROUSEL).build();
 
             // get the tag from the intent extras. if no tag was present in the payload use the
             // message id instead as its guaranteed to always be present.
@@ -71,7 +71,7 @@ class CampaignClassicIntentHandler {
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
         try {
-            final Notification notification = TemplateUtils.constructNotificationBuilder(context, AEPPushNotificationBuilder.trackerActivity, AEPPushNotificationBuilder.broadcastReceiver, intent, PushTemplateType.BASIC).build();
+            final Notification notification = TemplateUtils.constructNotificationBuilder(context, CampaignPushNotificationBuilder.trackerActivity, CampaignPushNotificationBuilder.broadcastReceiver, intent, PushTemplateType.BASIC).build();
 
             // get the tag from the intent extras. if no tag was present in the payload use the
             // message id instead as its guaranteed to always be present.

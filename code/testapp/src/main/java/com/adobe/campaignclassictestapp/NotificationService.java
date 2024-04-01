@@ -14,7 +14,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
-import com.adobe.marketing.mobile.AEPMessagingService;
+import com.adobe.marketing.mobile.CampaignMessagingService;
 import com.adobe.marketing.mobile.CampaignClassic;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -45,7 +45,7 @@ public class NotificationService extends FirebaseMessagingService {
 	@Override
 	public void onMessageReceived(RemoteMessage remoteMessage) {
 		Log.d(LOG_TAG, "From: " + remoteMessage.getFrom());
-		if (AEPMessagingService.handleRemoteMessage(this, remoteMessage)) {
+		if (CampaignMessagingService.handleRemoteMessage(this, remoteMessage)) {
 			// Campaign extension has handled the notification
 		} else {
 			// Handle notification from other sources
@@ -126,8 +126,7 @@ public class NotificationService extends FirebaseMessagingService {
 			connection.setDoInput(true);
 			connection.connect();
 			InputStream input = connection.getInputStream();
-			Bitmap bitmap = BitmapFactory.decodeStream(input);
-			return bitmap;
+            return BitmapFactory.decodeStream(input);
 
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -14,6 +14,8 @@ import androidx.annotation.NonNull;
 import com.adobe.marketing.mobile.campaignclassic.internal.CampaignClassicExtension;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,27 +39,6 @@ public class CampaignClassic {
             "The provided trackInfo map is null or empty";
 
     private CampaignClassic() {}
-
-    /**
-     * Registers the extension with the MobileCore SDK.
-     *
-     * <p>This method should be called only once in your application class.
-     */
-    @Deprecated
-    public static void registerExtension() {
-        MobileCore.registerExtension(
-                CampaignClassicExtension.class,
-                extensionError -> {
-                    if (extensionError == null) {
-                        return;
-                    }
-                    Log.error(
-                            LOG_TAG,
-                            SELF_TAG,
-                            "There was an error when registering the CampaignClassic extension: %s",
-                            extensionError.getErrorName());
-                });
-    }
 
     /**
      * Returns the current version of the {@code CampaignClassic} extension.

@@ -25,7 +25,7 @@ import java.util.Map;
  * This class is the entry point for all Adobe Campaign Classic out-of-the-box push template
  * notifications received from Firebase.
  */
-public class AEPMessagingService {
+public class CampaignMessagingService {
     static final String SELF_TAG = "AEPMessagingService";
 
     /**
@@ -37,7 +37,7 @@ public class AEPMessagingService {
      *
      * @param context the application {@link Context}
      * @param remoteMessage the {@link RemoteMessage} containing a push notification payload
-     * @return {@code boolean} signaling if the {@link AEPMessagingService} handled the remote
+     * @return {@code boolean} signaling if the {@link CampaignMessagingService} handled the remote
      *     message
      */
     public static boolean handleRemoteMessage(
@@ -49,7 +49,7 @@ public class AEPMessagingService {
             payload = new AEPPushPayload(remoteMessage);
             final String tag = payload.getTag();
             final Notification notification =
-                    AEPPushNotificationBuilder.buildPushNotification(payload, context);
+                    CampaignPushNotificationBuilder.buildPushNotification(payload, context);
             notificationManager.notify(tag.hashCode(), notification);
         } catch (final IllegalArgumentException exception) {
             Log.error(
