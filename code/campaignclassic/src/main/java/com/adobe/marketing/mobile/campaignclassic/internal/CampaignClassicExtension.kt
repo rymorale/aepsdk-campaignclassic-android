@@ -131,7 +131,7 @@ class CampaignClassicExtension : Extension {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "handleCampaignRequestEvent - Failed to process CAMPAIGN_CLASSIC REQUEST_CONTENT event" +
-                    "(event.eventData was null or empty)"
+                        "(event.eventData was null or empty)"
             )
             return
         }

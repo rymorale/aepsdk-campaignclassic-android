@@ -15,12 +15,15 @@ import java.text.StringCharacterIterator;
 import java.util.HashMap;
 import java.util.Map;
 
-/** CampaignClassicMapSerializer class */
+/**
+ * CampaignClassicMapSerializer class
+ */
 // Reference impl: Refer
 // https://git.corp.adobe.com/Campaign/mobile-sdk/blob/master/android/app/src/main/java/com/neolane/android/v1/MapSerializer.java
 class CampaignClassicMapSerializer {
 
-    private CampaignClassicMapSerializer() {}
+    private CampaignClassicMapSerializer() {
+    }
 
     /**
      * Serialize provided input map to XML string.
@@ -62,7 +65,7 @@ class CampaignClassicMapSerializer {
      * <p>This method returns the {@code String} representation of the provided {@code Object}. If
      * the {@code Object} contains a {@code Boolean}, {@code String} "true" or "false" is returned.
      *
-     * @param o {@link Object} containing value corresponding to the given {@code key}
+     * @param o   {@link Object} containing value corresponding to the given {@code key}
      * @param key {@link String} containing the key value
      * @return escaped {@code String} in Campaign Classic XML format containing given key-value.
      */

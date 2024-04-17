@@ -12,9 +12,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.ui.pushtemplate.NotificationConstructionFailedException;
-import com.adobe.marketing.mobile.services.ui.pushtemplate.PushTemplateType;
-import com.adobe.marketing.mobile.services.ui.pushtemplate.TemplateUtils;
+import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
+import com.adobe.marketing.mobile.services.ui.notification.TemplateUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.Calendar;
@@ -37,7 +36,7 @@ class CampaignClassicIntentHandler {
         try {
             final NotificationManagerCompat notificationManager =
                     NotificationManagerCompat.from(context);
-            final Notification notification = TemplateUtils.constructNotificationBuilder(context, CampaignPushNotificationBuilder.trackerActivity, CampaignPushNotificationBuilder.broadcastReceiver, intent, PushTemplateType.CAROUSEL).build();
+            final Notification notification = TemplateUtils.constructNotificationBuilder(intent).build();
 
             // get the tag from the intent extras. if no tag was present in the payload use the
             // message id instead as its guaranteed to always be present.
@@ -47,7 +46,8 @@ class CampaignClassicIntentHandler {
                             ? intentExtras.getString(CampaignPushConstants.IntentKeys.TAG)
                             : intentExtras.getString(CampaignPushConstants.IntentKeys.MESSAGE_ID);
             notificationManager.notify(tag.hashCode(), notification);
-        } catch (final NotificationConstructionFailedException exception) {
+        } catch (final NotificationConstructionFailedException |
+                       IllegalArgumentException exception) {
             Log.error(
                     CampaignPushConstants.LOG_TAG,
                     SELF_TAG,
@@ -71,7 +71,7 @@ class CampaignClassicIntentHandler {
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
         try {
-            final Notification notification = TemplateUtils.constructNotificationBuilder(context, CampaignPushNotificationBuilder.trackerActivity, CampaignPushNotificationBuilder.broadcastReceiver, intent, PushTemplateType.BASIC).build();
+            final Notification notification = TemplateUtils.constructNotificationBuilder(intent).build();
 
             // get the tag from the intent extras. if no tag was present in the payload use the
             // message id instead as its guaranteed to always be present.
@@ -81,7 +81,8 @@ class CampaignClassicIntentHandler {
                             ? intentExtras.getString(CampaignPushConstants.IntentKeys.TAG)
                             : intentExtras.getString(CampaignPushConstants.IntentKeys.MESSAGE_ID);
             notificationManager.notify(tag.hashCode(), notification);
-        } catch (final NotificationConstructionFailedException exception) {
+        } catch (final NotificationConstructionFailedException |
+                       IllegalArgumentException exception) {
             Log.error(
                     CampaignPushConstants.LOG_TAG,
                     SELF_TAG,
@@ -107,37 +108,30 @@ class CampaignClassicIntentHandler {
 
         // set the calender time to the remind timestamp to allow the notification to be displayed
         // at the later time
-        final long remindLaterTimestamp =
-                intentExtras.getLong(CampaignPushConstants.IntentKeys.REMIND_TS);
+        final long remindLaterEpochTimestamp = intentExtras.getLong(CampaignPushConstants.IntentKeys.REMIND_EPOCH_TS);
+        final int remindLaterDelayTimestamp = intentExtras.getInt(CampaignPushConstants.IntentKeys.REMIND_DELAY_TS);
         final Calendar calendar = Calendar.getInstance();
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
 
         // get the tag from the intent extras. if no tag was present in the payload use the message
         // id instead as its guaranteed to always be present.
-        final String tag =
-                !StringUtils.isNullOrEmpty(
-                        intentExtras.getString(CampaignPushConstants.IntentKeys.TAG))
-                        ? intentExtras.getString(CampaignPushConstants.IntentKeys.TAG)
-                        : intentExtras.getString(CampaignPushConstants.IntentKeys.MESSAGE_ID);
+        final String tag = intentExtras.getString(CampaignPushConstants.IntentKeys.TAG, CampaignPushConstants.IntentKeys.MESSAGE_ID);
 
-        if (remindLaterTimestamp > 0) {
+        // we will prefer the value stored in remindLaterDelayTimestamp if both are present
+        if (remindLaterEpochTimestamp > 0) {
+            Log.trace(
+                    CampaignPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Remind later delay is set to %d seconds, will reschedule the notification to be displayed %d seconds from now",
+                    remindLaterDelayTimestamp,
+                    remindLaterDelayTimestamp);
+            calendar.add(Calendar.SECOND, remindLaterDelayTimestamp);
+        } else if (remindLaterDelayTimestamp > 0) {
             // calculate difference in fire date. if fire date is greater than 0 then we want to
             // schedule a reminder notification.
             final long secondsUntilFireDate =
-                    remindLaterTimestamp - calendar.getTimeInMillis() / 1000;
-            if (secondsUntilFireDate <= 0) {
-                Log.trace(
-                        CampaignPushConstants.LOG_TAG,
-                        SELF_TAG,
-                        "Remind later date is before the current date. Will not reschedule the"
-                                + " notification.",
-                        secondsUntilFireDate);
-                // cancel the displayed notification
-                notificationManager.cancel(tag.hashCode());
-                return;
-            }
-
+                    remindLaterEpochTimestamp - calendar.getTimeInMillis() / 1000;
             Log.trace(
                     CampaignPushConstants.LOG_TAG,
                     SELF_TAG,
@@ -145,19 +139,28 @@ class CampaignClassicIntentHandler {
                             + " seconds from now",
                     secondsUntilFireDate);
             calendar.add(Calendar.SECOND, (int) secondsUntilFireDate);
-            // schedule a pending intent to be broadcast at the specified timestamp
-            final PendingIntent pendingIntent =
-                    createPendingIntentForScheduledNotification(context, intent);
-            final AlarmManager alarmManager =
-                    (AlarmManager) context.getSystemService(android.content.Context.ALARM_SERVICE);
+        } else {
+            Log.trace(
+                    CampaignPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Invalid remind later time provided. The notification will not be rescheduled.");
+            // cancel the displayed notification
+            notificationManager.cancel(tag.hashCode());
+            return;
+        }
 
-            if (alarmManager != null) {
-                alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        // schedule a pending intent to be broadcast at the specified timestamp
+        final PendingIntent pendingIntent =
+                createPendingIntentForScheduledNotification(context, intent);
+        final AlarmManager alarmManager =
+                (AlarmManager) context.getSystemService(android.content.Context.ALARM_SERVICE);
 
-                // cancel the displayed notification
-                notificationManager.cancel(tag.hashCode());
-            }
+        if (alarmManager != null) {
+            alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+
+            // cancel the displayed notification
+            notificationManager.cancel(tag.hashCode());
         }
     }
 
@@ -172,7 +175,6 @@ class CampaignClassicIntentHandler {
         scheduledIntent.setClass(context, AEPPushTemplateBroadcastReceiver.class);
         scheduledIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         scheduledIntent.putExtras(intent.getExtras());
-
         return PendingIntent.getBroadcast(
                 context,
                 0,

@@ -16,11 +16,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationManagerCompat;
+
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,7 +74,7 @@ public class CampaignPushTrackerActivity extends Activity {
      * @param intent the intent received from the push notification interaction
      */
     private void handlePushOpen(final Intent intent) {
-        CampaignClassic.trackNotificationReceive(getTrackInfo(intent));
+        CampaignClassic.trackNotificationReceive(getTrackInfo());
         executePushAction(intent);
     }
 
@@ -81,32 +84,19 @@ public class CampaignPushTrackerActivity extends Activity {
      * @param intent the intent received from interacting with buttons on push notification
      */
     private void handlePushButtonClicked(final Intent intent) {
-        CampaignClassic.trackNotificationClick(getTrackInfo(intent));
+        CampaignClassic.trackNotificationClick(getTrackInfo());
         executePushAction(intent);
     }
 
     /**
-     * Retrieves the Campaign Classic push notification tracking information from the received
-     * notification's {@link Intent}
+     * Retrieves the Campaign Classic push notification tracking information from the @{@link CampaignMessagingService}.
      *
-     * @param intent the intent received from the push notification
      * @return {@link Map<String, String>} containing the notification's tracking information
      */
-    private Map<String, String> getTrackInfo(final Intent intent) {
+    private Map<String, String> getTrackInfo() {
         final Map<String, String> trackInfo = new HashMap<>();
-        final Bundle extras = intent.getExtras();
-        if (extras == null) return trackInfo;
-
-        for (final String key : extras.keySet()) {
-            final Object value = extras.get(key);
-            if (value != null) {
-                if (key.equals(CampaignPushConstants.Tracking.Keys.MESSAGE_ID)) {
-                    trackInfo.put(key, value.toString());
-                } else if (key.equals(CampaignPushConstants.Tracking.Keys.DELIVERY_ID)) {
-                    trackInfo.put(key, value.toString());
-                }
-            }
-        }
+        trackInfo.put(CampaignPushConstants.Tracking.Keys.MESSAGE_ID, CampaignMessagingService.getMessageId());
+        trackInfo.put(CampaignPushConstants.Tracking.Keys.DELIVERY_ID, CampaignMessagingService.getDeliveryId());
         return trackInfo;
     }
 

@@ -17,7 +17,9 @@ import android.os.Build;
 
 import com.adobe.marketing.mobile.util.StringUtils;
 
-/** Broadcast receiver for handling custom push template notification interactions. */
+/**
+ * Broadcast receiver for handling custom push template notification interactions.
+ */
 public class AEPPushTemplateBroadcastReceiver extends BroadcastReceiver {
 
     @Override

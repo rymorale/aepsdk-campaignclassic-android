@@ -67,7 +67,7 @@ internal class TrackRequestManager {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "handleTrackRequest - Failed to process TrackNotification request," +
-                    "MobilePrivacyStatus is not optedIn."
+                        "MobilePrivacyStatus is not optedIn."
             )
             return
         }
@@ -86,7 +86,7 @@ internal class TrackRequestManager {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "handleTrackRequest - Failed to process TrackNotification request," +
-                    "trackingInfo deliveryId is null (missing key `_dId` from tracking Info) or empty."
+                        "trackingInfo deliveryId is null (missing key `_dId` from tracking Info) or empty."
             )
             return
         }
@@ -96,7 +96,7 @@ internal class TrackRequestManager {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "handleTrackRequest - Failed to process TrackNotification request," +
-                    "trackingInfo messageId is null (missing key `_mId` from tracking Info) or empty."
+                        "trackingInfo messageId is null (missing key `_mId` from tracking Info) or empty."
             )
             return
         }
@@ -111,8 +111,8 @@ internal class TrackRequestManager {
                     CampaignClassicConstants.LOG_TAG,
                     SELF_TAG,
                     "handleTrackRequest - Failed to process TrackNotification request," +
-                        "messageId $messageId could not be parsed as a UUID or a decimal (integer)." +
-                        "Error ${ex.message}"
+                            "messageId $messageId could not be parsed as a UUID or a decimal (integer)." +
+                            "Error ${ex.message}"
                 )
                 return
             }

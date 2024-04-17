@@ -87,7 +87,7 @@ internal class RegistrationManager {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "registerDevice - Failed to process device registration request," +
-                    "device token is not available."
+                        "device token is not available."
             )
             dispatchRegistrationStatus(false)
             return
@@ -100,7 +100,7 @@ internal class RegistrationManager {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "registerDevice - Failed to process device registration request," +
-                    "MobilePrivacyStatus is not optedIn."
+                        "MobilePrivacyStatus is not optedIn."
             )
             dispatchRegistrationStatus(false)
             return
@@ -112,7 +112,7 @@ internal class RegistrationManager {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "registerDevice - Failed to process device registration request," +
-                    "Marketing server is not configured."
+                        "Marketing server is not configured."
             )
             dispatchRegistrationStatus(false)
             return
@@ -123,7 +123,7 @@ internal class RegistrationManager {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "registerDevice - Failed to process device registration request," +
-                    "Integration key is not configured."
+                        "Integration key is not configured."
             )
             dispatchRegistrationStatus(false)
             return
@@ -151,7 +151,7 @@ internal class RegistrationManager {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "registerDevice - Failed to process device registration request," +
-                    "Cannot create registration info hash. Error $ex.message"
+                        "Cannot create registration info hash. Error $ex.message"
             )
             null
         }
@@ -162,14 +162,20 @@ internal class RegistrationManager {
                 CampaignClassicConstants.LOG_TAG,
                 SELF_TAG,
                 "registerDevice - Not sending device registration request," +
-                    "there is no change in registration info."
+                        "there is no change in registration info."
             )
             dispatchRegistrationStatus(true)
             return
         }
 
-        val payload = prepareRegistrationParams(registrationToken, integrationKey, userKey, additionalParametersString)
-        val registerURL = String.format(CampaignClassicConstants.REGISTER_API_URL_BASE, marketingServer)
+        val payload = prepareRegistrationParams(
+            registrationToken,
+            integrationKey,
+            userKey,
+            additionalParametersString
+        )
+        val registerURL =
+            String.format(CampaignClassicConstants.REGISTER_API_URL_BASE, marketingServer)
 
         // make the network request
         sendRegistrationRequest(registerURL, payload, configData.timeout, registrationInfoHash)
@@ -260,7 +266,12 @@ internal class RegistrationManager {
      * @param registrationHash [String] containing the SHA256 hashed device registration information.
      * @return true if registration request was successful, false otherwise
      */
-    private fun sendRegistrationRequest(requestUrl: String, payload: String, requestTimeout: Int, registrationHash: String?) {
+    private fun sendRegistrationRequest(
+        requestUrl: String,
+        payload: String,
+        requestTimeout: Int,
+        registrationHash: String?
+    ) {
         if (networkService == null) {
             Log.debug(
                 CampaignClassicConstants.LOG_TAG,
@@ -283,10 +294,18 @@ internal class RegistrationManager {
         )
 
         // send registration request
-        Log.trace(CampaignClassicConstants.LOG_TAG, SELF_TAG, "sendRegistrationRequest - Registration request was sent with url $requestUrl")
+        Log.trace(
+            CampaignClassicConstants.LOG_TAG,
+            SELF_TAG,
+            "sendRegistrationRequest - Registration request was sent with url $requestUrl"
+        )
         networkService.connectAsync(networkRequest) {
             if (it.responseCode == HttpURLConnection.HTTP_OK) {
-                Log.debug(CampaignClassicConstants.LOG_TAG, SELF_TAG, "sendRegistrationRequest - Registration successful.")
+                Log.debug(
+                    CampaignClassicConstants.LOG_TAG,
+                    SELF_TAG,
+                    "sendRegistrationRequest - Registration successful."
+                )
                 dispatchRegistrationStatus(true)
                 updateDataStoreWithRegistrationInfo(registrationHash)
             } else {
@@ -303,7 +322,11 @@ internal class RegistrationManager {
 
     private fun dispatchRegistrationStatus(registrationStatus: Boolean) {
         extensionApi.dispatch(
-            Event.Builder("Device Registration Status", EventType.CAMPAIGN, EventSource.RESPONSE_CONTENT)
+            Event.Builder(
+                "Device Registration Status",
+                EventType.CAMPAIGN,
+                EventSource.RESPONSE_CONTENT
+            )
                 .setEventData(
                     mapOf(
                         CampaignClassicConstants.EventDataKeys.CampaignClassic.REGISTRATION_STATUS to registrationStatus
@@ -316,7 +339,7 @@ internal class RegistrationManager {
     private fun buildHeaders(payload: String): Map<String, String> {
         return mapOf(
             CampaignClassicConstants.EventDataKeys.CampaignClassic.HTTP_HEADER_KEY_CONTENT_TYPE
-                to "${CampaignClassicConstants.EventDataKeys.CampaignClassic.HTTP_HEADER_CONTENT_TYPE_WWW_FORM_URLENCODED};${CampaignClassicConstants.EventDataKeys.CampaignClassic.HTTP_HEADER_CONTENT_TYPE_UTF8_CHARSET}",
+                    to "${CampaignClassicConstants.EventDataKeys.CampaignClassic.HTTP_HEADER_CONTENT_TYPE_WWW_FORM_URLENCODED};${CampaignClassicConstants.EventDataKeys.CampaignClassic.HTTP_HEADER_CONTENT_TYPE_UTF8_CHARSET}",
             CampaignClassicConstants.EventDataKeys.CampaignClassic.HTTP_HEADER_KEY_CONTENT_LENGTH to payload.length.toString()
         )
     }
@@ -362,7 +385,12 @@ internal class RegistrationManager {
         md.update(textBytes, 0, textBytes.size)
         val sb = StringBuilder()
         for (b in md.digest()) {
-            sb.append(java.lang.String.format(CampaignClassicConstants.HEX_CONVERSION_FORMAT_STRING, b))
+            sb.append(
+                java.lang.String.format(
+                    CampaignClassicConstants.HEX_CONVERSION_FORMAT_STRING,
+                    b
+                )
+            )
         }
         return sb.toString()
     }

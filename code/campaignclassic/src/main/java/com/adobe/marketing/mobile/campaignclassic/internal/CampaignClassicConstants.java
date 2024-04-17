@@ -10,10 +10,13 @@
 */
 package com.adobe.marketing.mobile.campaignclassic.internal;
 
-/** This class holds all constant values used only by the Campaign Classic extension */
+/**
+ * This class holds all constant values used only by the Campaign Classic extension
+ */
 final class CampaignClassicConstants {
 
-    private CampaignClassicConstants() {}
+    private CampaignClassicConstants() {
+    }
 
     static final String LOG_TAG = "CampaignClassicExtension";
     static final String EXTENSION_NAME = "com.adobe.module.campaignclassic";
@@ -32,6 +35,7 @@ final class CampaignClassicConstants {
     static final String DATASTORE_KEY = "ADOBEMOBILE_CAMPAIGNCLASSIC";
 
     static final String HEX_CONVERSION_FORMAT_STRING = "%02x";
+
     /*
        DataStoreKeys
     */
@@ -39,14 +43,16 @@ final class CampaignClassicConstants {
         static final String TOKEN_HASH = "ADOBEMOBILE_STOREDDEFAULTS_TOKENHASH";
         static final String REGISTER_STATUS = "ADOBEMOBILE_STOREDDEFAULTS_REGISTERSTATUS";
 
-        private DataStoreKeys() {}
+        private DataStoreKeys() {
+        }
     }
 
     /*
        EventDataKeys
     */
     static final class EventDataKeys {
-        private EventDataKeys() {}
+        private EventDataKeys() {
+        }
 
         static final class Configuration {
             static final String EXTENSION_NAME = "com.adobe.module.configuration";
@@ -58,7 +64,8 @@ final class CampaignClassicConstants {
                     "campaignclassic.android.integrationKey";
             static final String CAMPAIGNCLASSIC_TIMEOUT = "campaignclassic.timeout";
 
-            private Configuration() {}
+            private Configuration() {
+            }
         }
 
         static final class CampaignClassic {
@@ -78,7 +85,8 @@ final class CampaignClassicConstants {
             static final String HTTP_HEADER_CONTENT_TYPE_UTF8_CHARSET = "charset=UTF-8";
             static final String HTTP_HEADER_KEY_CONTENT_LENGTH = "Content-Length";
 
-            private CampaignClassic() {}
+            private CampaignClassic() {
+            }
         }
     }
 }

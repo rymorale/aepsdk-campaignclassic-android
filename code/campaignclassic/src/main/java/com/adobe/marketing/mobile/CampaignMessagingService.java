@@ -12,12 +12,16 @@ package com.adobe.marketing.mobile;
 
 import android.app.Notification;
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
+
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.ui.pushtemplate.AEPPushPayload;
-import com.adobe.marketing.mobile.services.ui.pushtemplate.NotificationConstructionFailedException;
+import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
+import com.adobe.marketing.mobile.services.ui.notification.TemplateUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.RemoteMessage;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,30 +30,49 @@ import java.util.Map;
  * notifications received from Firebase.
  */
 public class CampaignMessagingService {
-    static final String SELF_TAG = "AEPMessagingService";
+    private static final String SELF_TAG = "CampaignMessagingService";
+    private static String messageId;
+    private static String deliveryId;
 
     /**
-     * Builds an {@link AEPPushPayload} then constructs a {@link Notification} using the {@code
-     * RemoteMessage} payload. The built notification is then passed to the {@link
-     * NotificationManagerCompat} to be displayed. If any exceptions are thrown when building the
-     * {@code AEPPushPayload} or {@code Notification}, this method will return false signaling that
-     * the remote message was not handled by the {@code AEPMessagingService}.
+     * Builds a {@link Notification} using the {@code RemoteMessage} data payload. The built notification is then passed to the {@link
+     * NotificationManagerCompat} to be displayed. If any exceptions are thrown when building the {@code Notification},
+     * this method will return false signaling that the remote message was not handled by the {@code CampaignMessagingService}.
      *
-     * @param context the application {@link Context}
+     * @param context       the application {@link Context}
      * @param remoteMessage the {@link RemoteMessage} containing a push notification payload
      * @return {@code boolean} signaling if the {@link CampaignMessagingService} handled the remote
-     *     message
+     * message
      */
     public static boolean handleRemoteMessage(
             @NonNull final Context context, @NonNull final RemoteMessage remoteMessage) {
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
-        AEPPushPayload payload;
+        Map<String, String> messageData;
         try {
-            payload = new AEPPushPayload(remoteMessage);
-            final String tag = payload.getTag();
+            // validate the received message data
+            messageData = remoteMessage.getData();
+            if (messageData.isEmpty())
+                throw new IllegalArgumentException("Received message data is empty.");
+            messageId = messageData.get(CampaignPushConstants.Tracking.Keys.MESSAGE_ID);
+            if (StringUtils.isNullOrEmpty(messageId))
+                throw new IllegalArgumentException("Required field message id not found.");
+            deliveryId = messageData.get(CampaignPushConstants.Tracking.Keys.DELIVERY_ID);
+            if (StringUtils.isNullOrEmpty(deliveryId))
+                throw new IllegalArgumentException("Required field delivery id not found.");
+
+            // if we have a notification object, we can migrate the notification key value pairs to the message data if needed
+            final RemoteMessage.Notification receivedNotification = remoteMessage.getNotification();
+            if (receivedNotification != null) {
+                final Map<String, String> messageDataCopy = new HashMap<>(messageData);
+                messageData = convertNotificationPayloadData(receivedNotification, messageDataCopy);
+            }
+
+            // use the tag if present, otherwise use the message id as the tag
+            final String tag = !StringUtils.isNullOrEmpty(messageData.get(CampaignPushConstants.PushPayloadKeys.TAG)) ? messageData.get(CampaignPushConstants.PushPayloadKeys.TAG) : messageId;
+            messageData.put(CampaignPushConstants.PushPayloadKeys.TAG, tag);
             final Notification notification =
-                    CampaignPushNotificationBuilder.buildPushNotification(payload, context);
+                    CampaignPushNotificationBuilder.buildPushNotification(messageData);
             notificationManager.notify(tag.hashCode(), notification);
         } catch (final IllegalArgumentException exception) {
             Log.error(
@@ -70,12 +93,12 @@ public class CampaignMessagingService {
         }
 
         // call track notification receive as we know that the push payload data is valid
-        trackNotificationReceive(payload);
+        trackNotificationReceive(messageData);
 
         return true;
     }
 
-    private static void trackNotificationReceive(final AEPPushPayload payload) {
+    private static void trackNotificationReceive(final Map<String, String> messageData) {
         Log.trace(
                 CampaignPushConstants.LOG_TAG,
                 SELF_TAG,
@@ -83,12 +106,128 @@ public class CampaignMessagingService {
         final Map<String, String> trackInfo =
                 new HashMap<String, String>() {
                     {
-                        put(CampaignPushConstants.Tracking.Keys.MESSAGE_ID, payload.getMessageId());
-                        put(
-                                CampaignPushConstants.Tracking.Keys.DELIVERY_ID,
-                                payload.getDeliveryId());
+                        put(CampaignPushConstants.Tracking.Keys.MESSAGE_ID, messageId);
+                        put(CampaignPushConstants.Tracking.Keys.DELIVERY_ID, deliveryId);
                     }
                 };
         CampaignClassic.trackNotificationReceive(trackInfo);
+    }
+
+    static String getMessageId() {
+        return messageId;
+    }
+
+    static String getDeliveryId() {
+        return deliveryId;
+    }
+
+    /**
+     * Migrates any android.notification key value pairs to the equivalent adb prefixed keys.
+     * Note, the key value pairs present in the data payload are preferred over the notification key value pairs.
+     * The notification key value pairs will only be added to the message data if the corresponding key
+     * does not have a value.
+     * The following notification key value pairs are migrated:
+     * message.android.notification.icon to adb_small_icon
+     * message.android.notification.sound to adb_sound
+     * message.android.notification.tag to adb_tag
+     * message.android.notification.click_action to adb_uri
+     * message.android.notification.channel_id to adb_channel_id
+     * message.android.notification.ticker to adb_ticker
+     * message.android.notification.sticky to adb_sticky
+     * message.android.notification.visibility to adb_n_visibility
+     * message.android.notification.notification_priority to adb_n_priority
+     * message.android.notification.notification_count to adb_n_count
+     * message.notification.body to adb_body
+     * message.notification.title to adb_title
+     * message.notification.image to adb_image
+     *
+     * @param notification {@link RemoteMessage.Notification} received from the {@link com.google.firebase.messaging.FirebaseMessagingService}
+     * @param messageData  {@link Map} containing the {@link RemoteMessage} data payload
+     * @return {@code Map} containing the data payload with optionally migrated key value pairs
+     */
+    private static Map<String, String> convertNotificationPayloadData(final RemoteMessage.Notification notification, final Map<String, String> messageData) {
+        if (StringUtils.isNullOrEmpty(messageData.get(CampaignPushConstants.PushPayloadKeys.TAG))) {
+            messageData.put(CampaignPushConstants.PushPayloadKeys.TAG, notification.getTag());
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.SMALL_ICON))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.SMALL_ICON, notification.getIcon());
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.SOUND))) {
+            messageData.put(CampaignPushConstants.PushPayloadKeys.SOUND, notification.getSound());
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.ACTION_URI))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.ACTION_URI,
+                    notification.getClickAction());
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.CHANNEL_ID))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.CHANNEL_ID, notification.getChannelId());
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.TICKER))) {
+            messageData.put(CampaignPushConstants.PushPayloadKeys.TICKER, notification.getTicker());
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.STICKY))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.STICKY,
+                    String.valueOf(notification.getSticky()));
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.NOTIFICATION_VISIBILITY))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.NOTIFICATION_VISIBILITY,
+                    TemplateUtils.getNotificationCompatVisibilityMap().get(notification.getVisibility()));
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.NOTIFICATION_PRIORITY))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.NOTIFICATION_PRIORITY,
+                    TemplateUtils.getNotificationCompatPriorityMap().get(notification.getNotificationPriority()));
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.BADGE_NUMBER))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.BADGE_NUMBER,
+                    String.valueOf(notification.getNotificationCount()));
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.BODY))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.BODY,
+                    String.valueOf(notification.getBody()));
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.TITLE))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.TITLE,
+                    String.valueOf(notification.getTitle()));
+        }
+
+        if (StringUtils.isNullOrEmpty(
+                messageData.get(CampaignPushConstants.PushPayloadKeys.IMAGE_URL))) {
+            messageData.put(
+                    CampaignPushConstants.PushPayloadKeys.IMAGE_URL,
+                    String.valueOf(notification.getImageUrl()));
+        }
+
+        return messageData;
     }
 }
