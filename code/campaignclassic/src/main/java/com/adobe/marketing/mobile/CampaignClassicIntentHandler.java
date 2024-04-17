@@ -19,7 +19,11 @@ import com.adobe.marketing.mobile.util.StringUtils;
 import java.util.Calendar;
 
 class CampaignClassicIntentHandler {
-    static final String SELF_TAG = "CampaignClassicIntentHandler";
+    private static final String SELF_TAG = "CampaignClassicIntentHandler";
+    private static final String INVALID_DELAY = "The notification delay time (%s) seconds is invalid, will not schedule a reminder notification.";
+    private static final String INVALID_EPOCH_TIME = "The calculated remind later time (%s) seconds is invalid, will not schedule a reminder notification.";
+    private static final String NOTIFICATION_RESCHEDULED = "Remind later pressed, will reschedule the notification to be displayed (%s) seconds from now.";
+
 
     static void handleCarouselArrowClickedIntent(final Context context, final Intent intent) {
         final Bundle intentExtras = intent.getExtras();
@@ -118,34 +122,25 @@ class CampaignClassicIntentHandler {
         // id instead as its guaranteed to always be present.
         final String tag = intentExtras.getString(CampaignPushConstants.IntentKeys.TAG, CampaignPushConstants.IntentKeys.MESSAGE_ID);
 
+        long delayTime;
         // we will prefer the value stored in remindLaterDelayTimestamp if both are present
-        if (remindLaterEpochTimestamp > 0) {
-            Log.trace(
-                    CampaignPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Remind later delay is set to %d seconds, will reschedule the notification to be displayed %d seconds from now",
-                    remindLaterDelayTimestamp,
-                    remindLaterDelayTimestamp);
+        if (remindLaterDelayTimestamp > 0) {
+            delayTime = remindLaterDelayTimestamp;
             calendar.add(Calendar.SECOND, remindLaterDelayTimestamp);
-        } else if (remindLaterDelayTimestamp > 0) {
-            // calculate difference in fire date. if fire date is greater than 0 then we want to
-            // schedule a reminder notification.
+        } else if (remindLaterEpochTimestamp > 0) {
+            // next, we will use the epoch timestamp is it is available.
+            // we need to calculate a difference in fire date. if fire date is greater than 0 then we want to schedule a reminder notification.
             final long secondsUntilFireDate =
                     remindLaterEpochTimestamp - calendar.getTimeInMillis() / 1000;
-            Log.trace(
-                    CampaignPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Remind later pressed, will reschedule the notification to be displayed %d"
-                            + " seconds from now",
-                    secondsUntilFireDate);
+            if (secondsUntilFireDate <= 0) {
+                cancelNotification(notificationManager, tag, String.format(INVALID_EPOCH_TIME, (int) secondsUntilFireDate));
+                return;
+            }
+            delayTime = secondsUntilFireDate;
             calendar.add(Calendar.SECOND, (int) secondsUntilFireDate);
         } else {
-            Log.trace(
-                    CampaignPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Invalid remind later time provided. The notification will not be rescheduled.");
-            // cancel the displayed notification
-            notificationManager.cancel(tag.hashCode());
+            // just cancel the notification as we don't have a valid remind later or delay time
+            cancelNotification(notificationManager, tag, String.format(INVALID_DELAY, remindLaterDelayTimestamp));
             return;
         }
 
@@ -160,8 +155,19 @@ class CampaignClassicIntentHandler {
                     AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
 
             // cancel the displayed notification
-            notificationManager.cancel(tag.hashCode());
+            cancelNotification(notificationManager, tag, String.format(NOTIFICATION_RESCHEDULED, delayTime));
         }
+    }
+
+    private static void cancelNotification(final NotificationManagerCompat notificationManager, final String tag, final String reason) {
+        if (!StringUtils.isNullOrEmpty(reason)) {
+            Log.trace(
+                    CampaignPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    reason);
+        }
+        // cancel the displayed notification
+        notificationManager.cancel(tag.hashCode());
     }
 
     private static PendingIntent createPendingIntentForScheduledNotification(
