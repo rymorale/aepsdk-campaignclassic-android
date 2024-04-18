@@ -113,7 +113,7 @@ class CampaignClassicIntentHandler {
         // set the calender time to the remind timestamp to allow the notification to be displayed
         // at the later time
         final long remindLaterEpochTimestamp = intentExtras.getLong(CampaignPushConstants.IntentKeys.REMIND_EPOCH_TS);
-        final int remindLaterDelayTimestamp = intentExtras.getInt(CampaignPushConstants.IntentKeys.REMIND_DELAY_TS);
+        final int remindLaterDelaySeconds = intentExtras.getInt(CampaignPushConstants.IntentKeys.REMIND_DELAY_SECONDS);
         final Calendar calendar = Calendar.getInstance();
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
@@ -124,9 +124,9 @@ class CampaignClassicIntentHandler {
 
         long delayTime;
         // we will prefer the value stored in remindLaterDelayTimestamp if both are present
-        if (remindLaterDelayTimestamp > 0) {
-            delayTime = remindLaterDelayTimestamp;
-            calendar.add(Calendar.SECOND, remindLaterDelayTimestamp);
+        if (remindLaterDelaySeconds > 0) {
+            delayTime = remindLaterDelaySeconds;
+            calendar.add(Calendar.SECOND, remindLaterDelaySeconds);
         } else if (remindLaterEpochTimestamp > 0) {
             // next, we will use the epoch timestamp is it is available.
             // we need to calculate a difference in fire date. if fire date is greater than 0 then we want to schedule a reminder notification.
@@ -140,7 +140,7 @@ class CampaignClassicIntentHandler {
             calendar.add(Calendar.SECOND, (int) secondsUntilFireDate);
         } else {
             // just cancel the notification as we don't have a valid remind later or delay time
-            cancelNotification(notificationManager, tag, String.format(INVALID_DELAY, remindLaterDelayTimestamp));
+            cancelNotification(notificationManager, tag, String.format(INVALID_DELAY, remindLaterDelaySeconds));
             return;
         }
 

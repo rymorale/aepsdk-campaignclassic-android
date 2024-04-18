@@ -58,7 +58,7 @@ final class CampaignPushConstants {
     static final class IntentKeys {
         static final String MESSAGE_ID = "messageId";
         static final String REMIND_EPOCH_TS = "remindEpochTimestamp";
-        static final String REMIND_DELAY_TS = "remindDelayTimestamp";
+        static final String REMIND_DELAY_SECONDS = "remindDelaySeconds";
         static final String TAG = "tag";
 
         private IntentKeys() {
