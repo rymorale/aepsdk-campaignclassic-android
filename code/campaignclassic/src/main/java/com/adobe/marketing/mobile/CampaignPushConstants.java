@@ -50,6 +50,7 @@ final class CampaignPushConstants {
         static final String SCHEDULED_NOTIFICATION_BROADCAST = "scheduled_notification_broadcast";
         static final String MANUAL_CAROUSEL_LEFT_CLICKED = "manual_left";
         static final String MANUAL_CAROUSEL_RIGHT_CLICKED = "manual_right";
+        static final String INPUT_BOX_DEMO = "user input intent key";
 
         private IntentActions() {
         }

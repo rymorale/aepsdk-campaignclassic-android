@@ -7,9 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.RemoteInput;
 
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
@@ -17,6 +19,7 @@ import com.adobe.marketing.mobile.services.ui.notification.TemplateUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.Calendar;
+import java.util.Objects;
 
 class CampaignClassicIntentHandler {
     private static final String SELF_TAG = "CampaignClassicIntentHandler";
@@ -70,6 +73,49 @@ class CampaignClassicIntentHandler {
                     "Intent extras are null, will not handle the scheduled intent with action %s",
                     intent.getAction());
             return;
+        }
+
+        final NotificationManagerCompat notificationManager =
+                NotificationManagerCompat.from(context);
+        try {
+            final Notification notification = TemplateUtils.constructNotificationBuilder(intent).build();
+
+            // get the tag from the intent extras. if no tag was present in the payload use the
+            // message id instead as its guaranteed to always be present.
+            final String tag =
+                    !StringUtils.isNullOrEmpty(
+                            intentExtras.getString(CampaignPushConstants.IntentKeys.TAG))
+                            ? intentExtras.getString(CampaignPushConstants.IntentKeys.TAG)
+                            : intentExtras.getString(CampaignPushConstants.IntentKeys.MESSAGE_ID);
+            notificationManager.notify(tag.hashCode(), notification);
+        } catch (final NotificationConstructionFailedException |
+                       IllegalArgumentException exception) {
+            Log.error(
+                    CampaignPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create a push notification, a notification construction failed"
+                            + " exception occurred: %s",
+                    exception.getLocalizedMessage());
+        }
+    }
+
+    static void handleInputBoxIntent(final Context context, final Intent intent) {
+        final Bundle intentExtras = intent.getExtras();
+        if (intentExtras == null) {
+            Log.trace(
+                    CampaignPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Intent extras are null, will not handle the input box feedback intent with action %s",
+                    intent.getAction());
+            return;
+        }
+
+        // TODO: remove, demo only. capture the user input and display it in a toast
+        final String userInput = "User input: " + Objects.requireNonNull(RemoteInput.getResultsFromIntent(intent).getCharSequence(CampaignPushConstants.IntentActions.INPUT_BOX_DEMO)).toString();
+        if (!StringUtils.isNullOrEmpty(userInput)) {
+            final int duration = Toast.LENGTH_LONG;
+            final Toast toast = Toast.makeText(context, userInput, duration);
+            toast.show();
         }
 
         final NotificationManagerCompat notificationManager =

@@ -44,6 +44,9 @@ public class AEPPushTemplateBroadcastReceiver extends BroadcastReceiver {
             case CampaignPushConstants.IntentActions.SCHEDULED_NOTIFICATION_BROADCAST:
                 CampaignClassicIntentHandler.handleScheduledIntent(context, intent);
                 break;
+            case CampaignPushConstants.IntentActions.INPUT_BOX_DEMO:
+                CampaignClassicIntentHandler.handleInputBoxIntent(context, intent);
+                break;
         }
     }
 }
