@@ -14,11 +14,11 @@ import android.app.Notification;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
-import com.adobe.marketing.mobile.services.ui.notification.TemplateUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -33,6 +33,34 @@ public class CampaignMessagingService {
     private static final String SELF_TAG = "CampaignMessagingService";
     private static String messageId;
     private static String deliveryId;
+
+    private static final class NotificationPriority{
+        static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
+        static final String PRIORITY_MIN = "PRIORITY_MIN";
+        static final String PRIORITY_LOW = "PRIORITY_LOW";
+        static final String PRIORITY_HIGH = "PRIORITY_HIGH";
+        static final String PRIORITY_MAX = "PRIORITY_MAX";
+    }
+
+    private static final class NotificationVisibility {
+        static final String PUBLIC = "PUBLIC";
+        static final String PRIVATE = "PRIVATE";
+        static final String SECRET = "SECRET";
+    }
+
+    private static final Map<Integer, String> notificationCompatPriorityMap = new HashMap<Integer, String>() {{
+        put(NotificationCompat.PRIORITY_MIN, NotificationPriority.PRIORITY_MIN);
+        put(NotificationCompat.PRIORITY_LOW, NotificationPriority.PRIORITY_LOW);
+        put(NotificationCompat.PRIORITY_DEFAULT, NotificationPriority.PRIORITY_DEFAULT);
+        put(NotificationCompat.PRIORITY_HIGH, NotificationPriority.PRIORITY_HIGH);
+        put(NotificationCompat.PRIORITY_MAX, NotificationPriority.PRIORITY_MAX);
+    }};
+
+    private static final Map<Integer, String> notificationCompatVisibilityMap = new HashMap<Integer, String>() {{
+        put(NotificationCompat.VISIBILITY_PRIVATE, NotificationVisibility.PRIVATE);
+        put(NotificationCompat.VISIBILITY_PUBLIC, NotificationVisibility.PUBLIC);
+        put(NotificationCompat.VISIBILITY_SECRET, NotificationVisibility.SECRET);
+    }};
 
     /**
      * Builds a {@link Notification} using the {@code RemoteMessage} data payload. The built notification is then passed to the {@link
@@ -190,14 +218,14 @@ public class CampaignMessagingService {
                 messageData.get(CampaignPushConstants.PushPayloadKeys.NOTIFICATION_VISIBILITY))) {
             messageData.put(
                     CampaignPushConstants.PushPayloadKeys.NOTIFICATION_VISIBILITY,
-                    TemplateUtils.getNotificationCompatVisibilityMap().get(notification.getVisibility()));
+                    notificationCompatVisibilityMap.get(notification.getVisibility()));
         }
 
         if (StringUtils.isNullOrEmpty(
                 messageData.get(CampaignPushConstants.PushPayloadKeys.NOTIFICATION_PRIORITY))) {
             messageData.put(
                     CampaignPushConstants.PushPayloadKeys.NOTIFICATION_PRIORITY,
-                    TemplateUtils.getNotificationCompatPriorityMap().get(notification.getNotificationPriority()));
+                    notificationCompatPriorityMap.get(notification.getNotificationPriority()));
         }
 
         if (StringUtils.isNullOrEmpty(

@@ -12,8 +12,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ui.notification.AEPNotificationUtil;
 import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
-import com.adobe.marketing.mobile.services.ui.notification.TemplateUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.Calendar;
@@ -40,7 +40,7 @@ class CampaignClassicIntentHandler {
         try {
             final NotificationManagerCompat notificationManager =
                     NotificationManagerCompat.from(context);
-            final Notification notification = TemplateUtils.constructNotificationBuilder(intent).build();
+            final Notification notification = AEPNotificationUtil.constructNotificationBuilder(intent, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class).build();
 
             // get the tag from the intent extras. if no tag was present in the payload use the
             // message id instead as its guaranteed to always be present.
@@ -75,7 +75,7 @@ class CampaignClassicIntentHandler {
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
         try {
-            final Notification notification = TemplateUtils.constructNotificationBuilder(intent).build();
+            final Notification notification = AEPNotificationUtil.constructNotificationBuilder(intent, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class).build();
 
             // get the tag from the intent extras. if no tag was present in the payload use the
             // message id instead as its guaranteed to always be present.
