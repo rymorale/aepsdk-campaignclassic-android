@@ -22,7 +22,6 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -376,7 +375,6 @@ class BasicTemplateNotificationBuilder {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     static void handleRemindIntent(final Context context, final Intent intent) {
         // get basic notification values from the intent extras
         final Bundle intentExtras = intent.getExtras();
@@ -437,9 +435,22 @@ class BasicTemplateNotificationBuilder {
                     (AlarmManager) context.getSystemService(android.content.Context.ALARM_SERVICE);
 
             if (alarmManager != null) {
-                alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms()) {
+                    Log.trace(
+                            CampaignPushConstants.LOG_TAG,
+                            SELF_TAG,
+                            "Exact alarms are permitted, scheduling an exact alarm for the current notification.");
+                    alarmManager.setExactAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                } else {
+                    // schedule an inexact alarm for the current notification
+                    Log.trace(
+                            CampaignPushConstants.LOG_TAG,
+                            SELF_TAG,
+                            "Exact alarms are not permitted, scheduling an inexact alarm for the current notification.");
+                    alarmManager.set(
+                            AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                }
                 // cancel the displayed notification
                 notificationManager.cancel(tag.hashCode());
             }
