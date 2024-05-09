@@ -15,7 +15,7 @@ import android.app.Notification;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
-import com.adobe.marketing.mobile.services.ui.notification.AEPNotificationUtil;
+import com.adobe.marketing.mobile.services.ui.notification.NotificationBuilder;
 import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
 import java.util.Map;
 
@@ -37,7 +37,7 @@ class CampaignPushNotificationBuilder {
     @NonNull
     static Notification buildPushNotification(final Map<String, String> messageData)
             throws IllegalArgumentException, NotificationConstructionFailedException {
-        final NotificationCompat.Builder builder = AEPNotificationUtil.constructNotificationBuilder(messageData, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class);
+        final NotificationCompat.Builder builder = NotificationBuilder.constructNotificationBuilder(messageData, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class);
         return builder.build();
     }
 }

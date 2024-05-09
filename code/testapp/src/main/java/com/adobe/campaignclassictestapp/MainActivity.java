@@ -1,14 +1,19 @@
 package com.adobe.campaignclassictestapp;
 
+import static android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM;
+
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.CampaignClassic;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.MobilePrivacyStatus;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.AlarmManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -22,10 +27,12 @@ import android.preference.PreferenceManager;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -72,8 +79,8 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Log.d("Test", "Running version " +  MobileCore.extensionVersion() + "MobileCore-" + CampaignClassic.extensionVersion() +
-			  "CampaignClassicCore");
+		Log.d("Test", "Running version " + MobileCore.extensionVersion() + "MobileCore-" + CampaignClassic.extensionVersion() +
+				"CampaignClassicCore");
 
 		// handle push message click through
 		if (getIntent().getExtras() != null) {
@@ -91,6 +98,37 @@ public class MainActivity extends AppCompatActivity {
 
 			CampaignClassic.trackNotificationClick(trackInfo);
 		}
+
+		final AlarmManager alarmManager =
+				(AlarmManager) getApplicationContext().getSystemService(android.content.Context.ALARM_SERVICE);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+			if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
+				// Request exact alarm permission if not already granted
+				requestExactAlarmPermission();
+			}
+		}
+	}
+
+	@RequiresApi(api = Build.VERSION_CODES.S)
+	private void requestExactAlarmPermission() {
+		final Activity activity = ServiceProvider.getInstance().getAppContextService().getCurrentActivity();
+		final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
+		alertDialogBuilder.setTitle("Schedule Exact Alarm Permission Request");
+		alertDialogBuilder.setMessage("Allow the app to schedule exact alarms for reminder notifications? Click \"OK\" to be redirected to the Android settings to enable it.");
+
+		alertDialogBuilder.setPositiveButton(android.R.string.yes, (dialog, which) -> {
+			dialog.cancel();
+			final Intent requestAlarmPermissionIntent = new Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+			requestAlarmPermissionIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			activity.startActivity(requestAlarmPermissionIntent);
+
+		});
+
+		alertDialogBuilder.setNegativeButton(android.R.string.no, (dialog, which) -> dialog.cancel());
+
+		alertDialogBuilder.setIcon(android.R.drawable.sym_def_app_icon);
+		final AlertDialog alertDialog = alertDialogBuilder.create();
+		alertDialog.show();
 	}
 
 	public void registerDeviceSameUser(View view) {

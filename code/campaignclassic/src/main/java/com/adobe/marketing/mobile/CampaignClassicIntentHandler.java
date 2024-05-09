@@ -8,11 +8,10 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.ui.notification.AEPNotificationUtil;
+import com.adobe.marketing.mobile.services.ui.notification.NotificationBuilder;
 import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
 import com.adobe.marketing.mobile.util.StringUtils;
 
@@ -40,7 +39,7 @@ class CampaignClassicIntentHandler {
         try {
             final NotificationManagerCompat notificationManager =
                     NotificationManagerCompat.from(context);
-            final Notification notification = AEPNotificationUtil.constructNotificationBuilder(intent, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class).build();
+            final Notification notification = NotificationBuilder.constructNotificationBuilder(intent, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class).build();
 
             // get the tag from the intent extras. if no tag was present in the payload use the
             // message id instead as its guaranteed to always be present.
@@ -75,7 +74,7 @@ class CampaignClassicIntentHandler {
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
         try {
-            final Notification notification = AEPNotificationUtil.constructNotificationBuilder(intent, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class).build();
+            final Notification notification = NotificationBuilder.constructNotificationBuilder(intent, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class).build();
 
             // get the tag from the intent extras. if no tag was present in the payload use the
             // message id instead as its guaranteed to always be present.
@@ -96,7 +95,6 @@ class CampaignClassicIntentHandler {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     static void handleRemindIntent(final Context context, final Intent intent) {
         // get basic notification values from the intent extras
         final Bundle intentExtras = intent.getExtras();
@@ -148,11 +146,13 @@ class CampaignClassicIntentHandler {
         final PendingIntent pendingIntent =
                 createPendingIntentForScheduledNotification(context, intent);
         final AlarmManager alarmManager =
-                (AlarmManager) context.getSystemService(android.content.Context.ALARM_SERVICE);
+                (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         if (alarmManager != null) {
-            alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+            }
 
             // cancel the displayed notification
             cancelNotification(notificationManager, tag, String.format(NOTIFICATION_RESCHEDULED, delayTime));

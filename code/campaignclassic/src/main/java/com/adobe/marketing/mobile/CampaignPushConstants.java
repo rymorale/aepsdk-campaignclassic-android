@@ -67,6 +67,7 @@ final class CampaignPushConstants {
 
     static final class PushPayloadKeys {
         public static final String TITLE = "adb_title";
+        public static final String ACC_BODY = "_msg";
         public static final String BODY = "adb_body";
         public static final String SOUND = "adb_sound";
         public static final String BADGE_NUMBER = "adb_n_count";

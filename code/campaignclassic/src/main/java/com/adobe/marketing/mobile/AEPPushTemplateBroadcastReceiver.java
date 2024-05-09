@@ -37,9 +37,7 @@ public class AEPPushTemplateBroadcastReceiver extends BroadcastReceiver {
                 CampaignClassicIntentHandler.handleCarouselArrowClickedIntent(context, intent);
                 break;
             case CampaignPushConstants.IntentActions.REMIND_LATER_CLICKED:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    CampaignClassicIntentHandler.handleRemindIntent(context, intent);
-                }
+                CampaignClassicIntentHandler.handleRemindIntent(context, intent);
                 break;
             case CampaignPushConstants.IntentActions.SCHEDULED_NOTIFICATION_BROADCAST:
                 CampaignClassicIntentHandler.handleScheduledIntent(context, intent);

@@ -89,6 +89,12 @@ public class CampaignMessagingService {
             if (StringUtils.isNullOrEmpty(deliveryId))
                 throw new IllegalArgumentException("Required field delivery id not found.");
 
+            // use the acc "_msg" value as the message body if it is present
+            final String accMessageBody = messageData.get(CampaignPushConstants.PushPayloadKeys.ACC_BODY);
+            if (!StringUtils.isNullOrEmpty(accMessageBody)) {
+                messageData.put(CampaignPushConstants.PushPayloadKeys.BODY, accMessageBody);
+            }
+
             // if we have a notification object, we can migrate the notification key value pairs to the message data if needed
             final RemoteMessage.Notification receivedNotification = remoteMessage.getNotification();
             if (receivedNotification != null) {
