@@ -2,19 +2,16 @@ package com.adobe.campaignclassictestapp;
 
 import static android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM;
 
-import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.CampaignClassic;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.MobilePrivacyStatus;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -22,15 +19,12 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.util.Log;
@@ -99,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
 			CampaignClassic.trackNotificationClick(trackInfo);
 		}
 
+		// request exact alarm permission if needed
 		final AlarmManager alarmManager =
 				(AlarmManager) getApplicationContext().getSystemService(android.content.Context.ALARM_SERVICE);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -107,6 +102,18 @@ public class MainActivity extends AppCompatActivity {
 				requestExactAlarmPermission();
 			}
 		}
+
+		// register a shared preference change listener to capture input box feedback
+		final SharedPreferences inputBoxFeedbackPrefs = getSharedPreferences("inputBoxFeedback", Context.MODE_PRIVATE);
+		final SharedPreferences.OnSharedPreferenceChangeListener listener = (preferences, key) -> {
+			if (key.equals("inputBoxFeedback")) {
+				final String inputBoxFeedback = inputBoxFeedbackPrefs.getString("inputBoxFeedback", null);
+				if (!StringUtils.isNullOrEmpty(inputBoxFeedback)) {
+					Log.d(LOG_TAG, "Test app, received input box feedback: " + inputBoxFeedback);
+				}
+			}
+		};
+		inputBoxFeedbackPrefs.registerOnSharedPreferenceChangeListener(listener);
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.S)

@@ -35,6 +35,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver android:name="com.adobe.marketing.mobile.InputBoxFeedbackReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.developer input receiver"/>
+            </intent-filter>
+        </receiver>
         <!--firebase cloud services -->
         <service
             android:name=".NotificationService"

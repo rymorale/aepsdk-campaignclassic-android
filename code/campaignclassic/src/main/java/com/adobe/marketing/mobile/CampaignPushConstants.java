@@ -50,7 +50,7 @@ final class CampaignPushConstants {
         static final String SCHEDULED_NOTIFICATION_BROADCAST = "scheduled_notification_broadcast";
         static final String MANUAL_CAROUSEL_LEFT_CLICKED = "manual_left";
         static final String MANUAL_CAROUSEL_RIGHT_CLICKED = "manual_right";
-        static final String INPUT_BOX_DEMO = "user input intent key";
+        static final String INPUT_RECEIVED = "input_received";
 
         private IntentActions() {
         }
@@ -61,6 +61,8 @@ final class CampaignPushConstants {
         static final String REMIND_EPOCH_TS = "remindEpochTimestamp";
         static final String REMIND_DELAY_SECONDS = "remindDelaySeconds";
         static final String TAG = "tag";
+        static final String INPUT_BOX_RECEIVER_NAME = "feedbackReceiverName";
+        static final String INPUT_BOX_CONTENTS = "inputBoxContents";
 
         private IntentKeys() {
         }

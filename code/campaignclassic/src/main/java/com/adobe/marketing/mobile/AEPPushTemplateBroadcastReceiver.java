@@ -13,7 +13,6 @@ package com.adobe.marketing.mobile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 
 import com.adobe.marketing.mobile.util.StringUtils;
 
@@ -42,7 +41,7 @@ public class AEPPushTemplateBroadcastReceiver extends BroadcastReceiver {
             case CampaignPushConstants.IntentActions.SCHEDULED_NOTIFICATION_BROADCAST:
                 CampaignClassicIntentHandler.handleScheduledIntent(context, intent);
                 break;
-            case CampaignPushConstants.IntentActions.INPUT_BOX_DEMO:
+            case CampaignPushConstants.IntentActions.INPUT_RECEIVED:
                 CampaignClassicIntentHandler.handleInputBoxIntent(context, intent);
                 break;
         }

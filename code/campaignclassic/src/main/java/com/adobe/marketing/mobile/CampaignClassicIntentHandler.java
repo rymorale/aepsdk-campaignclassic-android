@@ -109,18 +109,32 @@ class CampaignClassicIntentHandler {
             return;
         }
 
-        // TODO: remove, demo only. capture the user input and display it in a toast
-        final String userInput = "User input: " + Objects.requireNonNull(RemoteInput.getResultsFromIntent(intent).getCharSequence(CampaignPushConstants.IntentActions.INPUT_BOX_DEMO)).toString();
-        if (!StringUtils.isNullOrEmpty(userInput)) {
-            final int duration = Toast.LENGTH_LONG;
-            final Toast toast = Toast.makeText(context, userInput, duration);
-            toast.show();
+        final String feedbackReceiverName =
+                intentExtras.getString(CampaignPushConstants.IntentKeys.INPUT_BOX_RECEIVER_NAME);
+        if (StringUtils.isNullOrEmpty(feedbackReceiverName)) {
+            Log.trace(
+                    CampaignPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Feedback receiver name is null or empty, will not dispatch the user input to the specified feedback receiver.");
+            return;
         }
 
+        final String userInput = Objects.requireNonNull(RemoteInput.getResultsFromIntent(intent).getCharSequence(feedbackReceiverName)).toString();
+        if (StringUtils.isNullOrEmpty(userInput)) {
+            Log.trace(
+                    CampaignPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "User input is null or empty, will not dispatch the user input to the specified feedback receiver (%s).", feedbackReceiverName);
+            return;
+        }
+
+        dispatchFeedbackIntent(context, feedbackReceiverName, userInput);
+
+        // display a feedback received notification
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(context);
         try {
-            final Notification notification = TemplateUtils.constructNotificationBuilder(intent).build();
+            final Notification notification = NotificationBuilder.constructNotificationBuilder(intent, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class).build();
 
             // get the tag from the intent extras. if no tag was present in the payload use the
             // message id instead as its guaranteed to always be present.
@@ -139,6 +153,21 @@ class CampaignClassicIntentHandler {
                             + " exception occurred: %s",
                     exception.getLocalizedMessage());
         }
+    }
+
+    /**
+     * Dispatches the received user input to the specified feedback broadcast receiver.
+     *
+     * @param context the {@link Context} to use for sending the broadcast.
+     * @param feedbackReceiverName the {@code String} name of the broadcast receiver to dispatch the user input to.
+     * @param userInput the user input {@code String} received from the input box notification.
+     * */
+    private static void dispatchFeedbackIntent(final Context context, final String feedbackReceiverName, final String userInput) {
+        final Intent feedbackIntent = new Intent(feedbackReceiverName);
+        feedbackIntent.putExtra(CampaignPushConstants.IntentKeys.INPUT_BOX_CONTENTS, userInput);
+        feedbackIntent.setClass(context, InputBoxFeedbackReceiver.class);
+        feedbackIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        context.sendBroadcast(feedbackIntent);
     }
 
     static void handleRemindIntent(final Context context, final Intent intent) {
