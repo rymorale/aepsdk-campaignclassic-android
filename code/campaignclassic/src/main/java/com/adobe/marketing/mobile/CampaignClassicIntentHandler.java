@@ -7,14 +7,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.widget.Toast;
 
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.RemoteInput;
 
+import com.adobe.marketing.mobile.notificationbuilder.NotificationConstructionFailedException;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.ui.notification.NotificationBuilder;
-import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationBuilder;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.Calendar;
@@ -52,8 +51,7 @@ class CampaignClassicIntentHandler {
                             ? intentExtras.getString(CampaignPushConstants.IntentKeys.TAG)
                             : intentExtras.getString(CampaignPushConstants.IntentKeys.MESSAGE_ID);
             notificationManager.notify(tag.hashCode(), notification);
-        } catch (final NotificationConstructionFailedException |
-                       IllegalArgumentException exception) {
+        } catch (final IllegalArgumentException | NotificationConstructionFailedException exception) {
             Log.error(
                     CampaignPushConstants.LOG_TAG,
                     SELF_TAG,
@@ -155,13 +153,49 @@ class CampaignClassicIntentHandler {
         }
     }
 
+    static void handleProductCatalogThumbnailIntent(final Context context, final Intent intent) {
+        final Bundle intentExtras = intent.getExtras();
+        if (intentExtras == null) {
+            Log.trace(
+                    CampaignPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Intent extras are null, will not handle the product catalog intent with"
+                            + " action %s",
+                    intent.getAction());
+            return;
+        }
+
+        try {
+            final NotificationManagerCompat notificationManager =
+                    NotificationManagerCompat.from(context);
+            final Notification notification = NotificationBuilder.constructNotificationBuilder(intent, CampaignPushTrackerActivity.class, AEPPushTemplateBroadcastReceiver.class).build();
+
+            // get the tag from the intent extras. if no tag was present in the payload use the
+            // message id instead as its guaranteed to always be present.
+            final String tag =
+                    !StringUtils.isNullOrEmpty(
+                            intentExtras.getString(CampaignPushConstants.IntentKeys.TAG))
+                            ? intentExtras.getString(CampaignPushConstants.IntentKeys.TAG)
+                            : intentExtras.getString(CampaignPushConstants.IntentKeys.MESSAGE_ID);
+            notificationManager.notify(tag.hashCode(), notification);
+        } catch (final NotificationConstructionFailedException |
+                       IllegalArgumentException exception) {
+            Log.error(
+                    CampaignPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create a push notification, a notification construction failed"
+                            + " exception occurred: %s",
+                    exception.getLocalizedMessage());
+        }
+    }
+
     /**
      * Dispatches the received user input to the specified feedback broadcast receiver.
      *
-     * @param context the {@link Context} to use for sending the broadcast.
+     * @param context              the {@link Context} to use for sending the broadcast.
      * @param feedbackReceiverName the {@code String} name of the broadcast receiver to dispatch the user input to.
-     * @param userInput the user input {@code String} received from the input box notification.
-     * */
+     * @param userInput            the user input {@code String} received from the input box notification.
+     */
     private static void dispatchFeedbackIntent(final Context context, final String feedbackReceiverName, final String userInput) {
         final Intent feedbackIntent = new Intent(feedbackReceiverName);
         feedbackIntent.putExtra(CampaignPushConstants.IntentKeys.INPUT_BOX_CONTENTS, userInput);

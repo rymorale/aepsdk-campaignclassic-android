@@ -18,7 +18,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationConstructionFailedException;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.RemoteMessage;
 

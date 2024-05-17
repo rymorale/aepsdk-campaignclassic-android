@@ -51,7 +51,9 @@ final class CampaignPushConstants {
         static final String MANUAL_CAROUSEL_LEFT_CLICKED = "manual_left";
         static final String MANUAL_CAROUSEL_RIGHT_CLICKED = "manual_right";
         static final String INPUT_RECEIVED = "input_received";
-
+        static final String CATALOG_THUMBNAIL_1_CLICKED = "thumbnail_1_clicked";
+        static final String CATALOG_THUMBNAIL_2_CLICKED = "thumbnail_2_clicked";
+        static final String CATALOG_THUMBNAIL_3_CLICKED = "thumbnail_3_clicked";
         private IntentActions() {
         }
     }

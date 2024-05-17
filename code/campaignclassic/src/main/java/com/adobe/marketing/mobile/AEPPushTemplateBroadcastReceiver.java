@@ -44,6 +44,11 @@ public class AEPPushTemplateBroadcastReceiver extends BroadcastReceiver {
             case CampaignPushConstants.IntentActions.INPUT_RECEIVED:
                 CampaignClassicIntentHandler.handleInputBoxIntent(context, intent);
                 break;
+            case CampaignPushConstants.IntentActions.CATALOG_THUMBNAIL_1_CLICKED:
+            case CampaignPushConstants.IntentActions.CATALOG_THUMBNAIL_2_CLICKED:
+            case CampaignPushConstants.IntentActions.CATALOG_THUMBNAIL_3_CLICKED:
+                CampaignClassicIntentHandler.handleProductCatalogThumbnailIntent(context, intent);
+                break;
         }
     }
 }

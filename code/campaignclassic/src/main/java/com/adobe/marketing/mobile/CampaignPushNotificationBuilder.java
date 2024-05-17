@@ -15,8 +15,8 @@ import android.app.Notification;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
-import com.adobe.marketing.mobile.services.ui.notification.NotificationBuilder;
-import com.adobe.marketing.mobile.services.ui.notification.NotificationConstructionFailedException;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationBuilder;
+import com.adobe.marketing.mobile.notificationbuilder.NotificationConstructionFailedException;
 import java.util.Map;
 
 /**
